@@ -26,12 +26,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/<your-name>/zzz-airui-whale-widget.git"
+    "url": "git+https://github.com/Yoimiya-lover/zzz-airui-whale-widget.git"
   },
   "bugs": {
-    "url": "https://github.com/<your-name>/zzz-airui-whale-widget/issues"
+    "url": "https://github.com/Yoimiya-lover/zzz-airui-whale-widget/issues"
   },
-  "homepage": "https://github.com/<your-name>/zzz-airui-whale-widget#readme",
+  "homepage": "https://github.com/Yoimiya-lover/zzz-airui-whale-widget#readme",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
