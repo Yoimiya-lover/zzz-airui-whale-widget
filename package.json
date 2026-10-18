@@ -1,6 +1,6 @@
 {
   "name": "dsh-whale-widget-airui",
-  "version": "0.4.2-airui.4",
+  "version": "0.4.2-airui.5",
   "description": "DSH 右下角余额挂件·爱芮版：基于 dsh-whale-widget（MIT）的 fork，把静态小鲸鱼换成《绝区零》爱芮的实时 Spine 骨骼动画（待机/点击反馈/视线跟随），保留余额、今日已用、泡泡、音效与吸附翻转等全部能力",
   "keywords": [
     "dsh",

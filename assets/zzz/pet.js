@@ -44,6 +44,8 @@
   var mount = null
   var clickTimes = []
   var lastClickAt = 0
+  var livePets = 0
+  var drawCount = 0
 
   function log() {
     try {
@@ -69,6 +71,7 @@
   }
 
   function Pet(canvas) {
+    livePets++
     this.canvas = canvas
     this.gl = null
     this.renderer = null
@@ -183,10 +186,23 @@
     cam.update()
   }
 
+  // 切动作/表情前必须把槽位恢复成 setup pose：
+  // 表情动画用 attachment 关键帧做眨眼（眼睛_闭眼），如果在上一次眨眼的中途切走，
+  // 新表情又没给这个槽位设关键帧，闭眼贴图就会一直留着 —— 表现就是“睁眼和闭眼叠在一起”。
+  // 桌宠的 AnimationMixer.setOverlay 也是这么处理的（setToSetupPose + setSlotsToSetupPose）。
+  Pet.prototype.resetSlots = function () {
+    if (!this.skeleton) return
+    this.skeleton.setToSetupPose()
+    this.skeleton.setSlotsToSetupPose()
+  }
+
   Pet.prototype.playIdle = function () {
     if (!this.state) return
+    this.state.clearTrack(1)
+    this.resetSlots()
     this.state.setAnimation(0, IDLE_BODY, true)
     this.state.setAnimation(1, IDLE_FACE, true)
+    this.state.apply(this.skeleton)
   }
 
   Pet.prototype.playOnce = function (body, face) {
@@ -194,8 +210,10 @@
     var anim = this.data.findAnimation(body)
     if (!anim) return
     this.state.clearTrack(1)
+    this.resetSlots()
     this.state.setAnimation(0, body, false)
     if (face && this.data.findAnimation(face)) this.state.setAnimation(1, face, true)
+    this.state.apply(this.skeleton)
   }
 
   Pet.prototype.onPointerMove = function (e) {
@@ -351,6 +369,7 @@
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     this.renderer.begin()
+    drawCount++
     this.renderer.drawSkeleton(this.skeleton, true)
     this.renderer.end()
     if (gazing && this.gazePrev) {
@@ -377,6 +396,7 @@
       if (ext) ext.loseContext()
     } catch (err) {}
     this.ready = false
+    livePets--
   }
 
   function widgetBody() {
@@ -505,7 +525,9 @@
       mount.playVoice('angry')
       say(pickLine('angry'))
     } else if (double) {
-      mount.playOnce('动作_自信', '表情_自信')
+      // 表情_自信 是单眼 wink（右眼眼框/眼珠被清空，换成 眼r_生气 的闭眼贴图）。
+      // 挂件尺寸下它看起来像“闭眼叠在睁眼上”，双击改用双眼星星眼。
+      mount.playOnce('动作_自信', '表情_兴奋')
       mount.playVoice('happy')
     } else {
       mount.playOnce('动作_兴奋', '表情_兴奋')
@@ -525,7 +547,7 @@
       mount.playVoice('angry')
       say(pickLine('low'))
     } else if (kind === 'recharge') {
-      mount.playOnce('动作_自信', '表情_自信')
+      mount.playOnce('动作_自信', '表情_兴奋')
       mount.playVoice('recharge')
     }
   }
@@ -562,6 +584,8 @@
         glVW: mount.gl.drawingBufferWidth,
         glVH: mount.gl.drawingBufferHeight,
         bounds: mount.bounds,
+        pets: livePets,
+        draws: drawCount,
         anim: (function () {
           try {
             var e = mount.state.getCurrent(0)
@@ -575,6 +599,14 @@
           tx: +mount.gazeTarget.x.toFixed(2),
           ty: +mount.gazeTarget.y.toFixed(2),
         } : null,
+        eyes: (function () {
+          try {
+            return ['眼睛_闭眼', '眼l_眼框', '眼r_眼框', '眼r_生气', '眼r_眼珠'].map(function (n) {
+              var s = mount.skeleton.findSlot(n)
+              return n + '=' + (s && s.getAttachment() ? s.getAttachment().name : '-')
+            })
+          } catch (err) { return null }
+        })(),
       }
     },
   }
