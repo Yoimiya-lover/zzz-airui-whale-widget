@@ -40,26 +40,32 @@
 
 > 桌面端读的是 `desktop` profile，**不能用** `dsh plugin --profile web add`（CLI 会拒绝 `--profile desktop`，这是设计如此）。
 
-### 方式 A：本地包 + 内置 plugin_manager（推荐）
+### 方式 A：一键安装（推荐）
 
-1. 把 `dsh-whale-widget-airui-0.4.2-airui.6.tgz` 放到一个**固定、以后不会移动**的目录，例如
-   `D:\Plugins\dsh-whale-widget-airui\`。
-2. 在 DSH 桌面客户端里新建/使用一个会话，对 DSH 说：
+1. 下载本仓库（`Code → Download ZIP`，或 `git clone`）。
+2. 双击 **`一键安装爱芮挂件.bat`**。
+3. 等它自动完成：退出 DSH → 现场打包 → 安装登记 → **下载语音（约 173MB，可跳过）** → 启动 DSH。
+4. 右下角出现爱芮即成功；没有就按一次 `Ctrl+F5`，或看下面「自检」。
+
+> 不想下载语音：`powershell -ExecutionPolicy Bypass -File install-airui.ps1 -NoVoice`
+>
+> 也可以只跑命令（仓库根目录）：
+> ```powershell
+> powershell -NoProfile -ExecutionPolicy Bypass -File .\install-airui.ps1
+> ```
+
+### 方式 B：本地包 + 内置 plugin_manager
+
+1. 用 `scripts\pack-public.ps1` 打一个**不含语音**的安装包（或直接用 Release 里的 `-public.tgz`）。
+2. 在 DSH 会话里说：
 
    > 请使用当前桌面端内置的 `plugin_manager`，安装本机包
-   > `file:D:\Plugins\dsh-whale-widget-airui\dsh-whale-widget-airui-0.4.2-airui.6.tgz`。
-   > 先核对当前 profile 是 `desktop`、是否已装同名插件；完成后告诉我结果和是否需要重启。
+   > `file:<tgz 绝对路径>`。先核对 profile 是 `desktop`、是否已有同名插件；完成后告诉我结果和是否需要重启。
 
-3. **完全退出客户端**（含系统托盘图标）再重新打开。
-4. 右下角出现爱芮即成功；若没有，先看下面「自检」。
+3. **完全退出客户端**（含系统托盘）再重新打开。
+4. 语音可后补：`powershell -ExecutionPolicy Bypass -File scripts\fetch-voice.ps1 -TargetDir "%USERPROFILE%\.dsh\profiles\desktop\node_modules\dsh-whale-widget-airui\assets\zzz\voice"`
 
-### 方式 B：解压目录（装成普通依赖）
-
-1. 把 tgz 解压到固定目录，确保这一层里有 `package.json`、`cordis.patch.yml`、`lib/`、`assets/`。
-2. 同样用 `plugin_manager`，安装规格改成 `file:<解压目录的绝对路径>`。
-
-> 网页版（`dsh web`）可以走命令行：
-> `dsh plugin --profile web add link:<解压目录绝对路径>`，然后重启 `dsh web` + `Ctrl+F5`。
+> 网页版（`dsh web`）：`dsh plugin --profile web add link:<解压目录绝对路径>`，重启后 `Ctrl+F5`。
 
 ### 自检
 
@@ -142,7 +148,9 @@ plugin/
 ## 语音
 
 - 点击/双击/连点、每轮消耗、余额预警、充值、空闲（45–90 秒一次）都会播放对应的爱芮中文台词，并与「全部音效」总开关联动。
-- 台词文件来自游戏内语音（Ariaidol），**版权归米哈游，仅本地使用**：ssets/zzz/voice/ 已在 .gitignore 中排除，不会随 GitHub 仓库分发；缺失时自动静默。
+- 语音**不随仓库和公开安装包分发**：`assets/zzz/voice/` 已加入 `.gitignore`。安装脚本默认会从公开数据集自动获取 13 条（约 173MB，来自 [Zenless Voice](https://huggingface.co/datasets/simon3000/zenless-voice) 的中文说话人 `Ariaidol`），不想下载可加 `-NoVoice`。
+- 语音版权归**米哈游 / COGNOSPHERE**，仅供个人使用，**请勿再分发**；缺失时插件静默运行，不影响其他功能。
+- 之后想补语音：`powershell -ExecutionPolicy Bypass -File scripts\fetch-voice.ps1`（可用 `-TargetDir` 指向已安装插件的 `assets\zzz\voice`）。
 
 ## 已知限制
 
