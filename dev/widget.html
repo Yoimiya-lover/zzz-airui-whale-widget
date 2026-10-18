@@ -28,7 +28,8 @@
 <script>
   try {
     var wantRole = new URLSearchParams(location.search).get('role')
-    localStorage.setItem('dshw-role', wantRole || 'airui')
+    if (wantRole) localStorage.setItem('dshw-role', wantRole)
+    if (location.search.indexOf('clearrole=1') >= 0) localStorage.removeItem('dshw-role')
   } catch (err) {}
   if (location.search.indexOf('click=1') >= 0) {
     setTimeout(function () { try { window.ZZZPet && window.ZZZPet.onClick() } catch (err) {} }, 2500)

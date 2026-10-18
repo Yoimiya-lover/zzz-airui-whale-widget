@@ -1341,10 +1341,11 @@ root.className = 'dshwv-root'
 var img = document.createElement('img')
 img.className = 'dshwv-img'
 // 首次渲染直接用上次保存的角色（避免刷新瞬间先闪默认鲸鱼娘再切角色）。
+// 本 fork 的默认角色是“爱芮”；用户主动切到小鲸鱼后会保存为 default。
 // loadRoles() 异步完成后会再校验：角色仍在则保持，被删则回退默认。
 var initRoleUrl = IMG_URL
 try {
-  var initRoleId = localStorage.getItem('dshw-role') || ''
+  var initRoleId = localStorage.getItem('dshw-role') || 'airui'
   if (initRoleId && initRoleId !== 'default') {
     initRoleUrl = initRoleId === 'airui' ? '/dsh-whale/zzz/airui-idle.png' : '/dsh-whale/role-image.png?id=' + encodeURIComponent(initRoleId)
   }
@@ -19990,9 +19991,9 @@ function loadRoles() {
         if (!d || !d.ok || !Array.isArray(d.roles)) return
         roleList = d.roles
         renderRolePanel()
-        // 恢复上次选择的角色
+        // 恢复上次选择的角色（没有记录时默认爱芮）
         var saved = ''
-        try { saved = localStorage.getItem('dshw-role') || '' } catch (err) {}
+        try { saved = localStorage.getItem('dshw-role') || 'airui' } catch (err) {}
         var found = null
         for (var i = 0; i < roleList.length; i++) {
           if (roleList[i].id === saved) { found = roleList[i]; break }
