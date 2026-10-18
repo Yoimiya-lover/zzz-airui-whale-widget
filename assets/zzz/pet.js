@@ -83,6 +83,7 @@
     this.gazeTarget = { x: 0, y: 0 }
     this.gaze = { x: 0, y: 0 }
     this.voiceEnabled = true
+    this.pendingIdle = false
     this.voiceEls = {}
     this.voiceLast = ''
     this.voiceCurrent = null
@@ -142,7 +143,10 @@
         complete: function (entry) {
           if (!entry || entry.trackIndex !== 0) return
           var anim = entry.animation
-          if (anim && anim.name !== IDLE_BODY) self.playIdle()
+          // ⚠️ 不能在 complete 回调里直接 setAnimation/apply —— 此时 AnimationState 正在
+          // update() 中，改了也会被这一轮更新覆盖，表现为“动作播完弹回不去、每帧重复 complete”。
+          // 只打标记，下一帧 render 开头再切。
+          if (anim && anim.name !== IDLE_BODY && Date.now() - (self.lastIdleAt || 0) > 500) self.pendingIdle = true
         },
       })
       self.ready = true
@@ -198,6 +202,7 @@
 
   Pet.prototype.playIdle = function () {
     if (!this.state) return
+    this.lastIdleAt = Date.now()
     this.state.clearTrack(1)
     this.resetSlots()
     this.state.setAnimation(0, IDLE_BODY, true)
@@ -359,6 +364,10 @@
     // 挂件被隐藏（display:none 或移出文档）时不烧 GPU
     if (!this.canvas.isConnected || !this.canvas.offsetParent) return
     var gl = this.gl
+    if (this.pendingIdle) {
+      this.pendingIdle = false
+      this.playIdle()
+    }
     this.state.update(dt)
     this.state.apply(this.skeleton)
     this.skeleton.updateWorldTransform(window.spine.Physics.update)
