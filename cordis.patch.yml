@@ -1,0 +1,14 @@
+# ============================================================================
+# dsh-whale-widget-airui —— DSH bundle patch
+# ============================================================================
+# 这是插件的“挂载声明”。DSH 启动时按 bundle 层栈叠加各插件 patch，
+# 本文件会把「爱芮余额挂件」插入当前 profile 的配置树。
+#
+# 安装方式：
+#   dsh plugin --profile web add link:<本目录绝对路径>
+# 桌面端（desktop profile）请用客户端内置 plugin_manager，或安装打包后的 tgz。
+# ============================================================================
+
+- insert:
+    - id: dsh-whale-widget-airui
+      name: dsh-whale-widget-airui

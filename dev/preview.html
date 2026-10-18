@@ -1,0 +1,25 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>爱芮 · Spine 预览</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #1b1e28; color: #cfe3ff; font: 13px/1.5 Consolas, monospace; }
+  #wrap { display: flex; gap: 16px; padding: 16px; align-items: flex-start; }
+  #stage { width: 610px; height: 610px; background:
+      linear-gradient(45deg, #2a2f3f 25%, transparent 25%, transparent 75%, #2a2f3f 75%) 0 0 / 32px 32px,
+      linear-gradient(45deg, #2a2f3f 25%, #232733 25%, #232733 75%, #2a2f3f 75%) 16px 16px / 32px 32px,
+      #232733;
+    border: 1px solid #3b4256; border-radius: 6px; }
+  #log { white-space: pre-wrap; max-width: 460px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="stage" width="610" height="610"></canvas>
+  <pre id="log">loading…</pre>
+</div>
+<script src="/assets/zzz/runtime/spine-webgl.min.js"></script>
+<script src="/dev/preview.js"></script>
+</body>
+</html>
