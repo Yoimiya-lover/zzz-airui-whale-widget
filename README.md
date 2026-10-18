@@ -3,6 +3,10 @@
 > 把 [dsh-whale-widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget) 右下角的小鲸鱼，换成《绝区零》爱芮的**实时 Spine 骨骼动画**。
 > 余额、今日已用、每轮消耗、泡泡编辑器、音效、吸附翻转——上游能力一个不少；小鲸鱼仍可随时切回。
 
+> ⚠️ **非官方、非商业同人项目**：与米哈游 / HoYoverse、DeepSeek 均无隶属或合作关系，不提供商业授权。
+> 角色与语音版权归米哈游 / COGNOSPHERE；语音不随仓库与公开安装包分发。
+> 完整来源、许可与移除方式见 **[NOTICE.md](NOTICE.md)**；权利人可在 Issues 说明文件与依据，核实后会立即移除。
+
 ![挂件预览](docs/preview-idle.png)
 
 <p align="center"><img src="docs/preview-click.png" width="720" alt="点击后爱芮做出兴奋动作"></p>

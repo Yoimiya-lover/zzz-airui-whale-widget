@@ -22,6 +22,7 @@
     "cordis.patch.yml",
     "README.md",
     "PROVENANCE.md",
+    "NOTICE.md",
     "LICENSE"
   ],
   "repository": {
