@@ -1,4 +1,4 @@
-﻿# 爱芮余额挂件（DSH）
+# 爱芮余额挂件（DSH）
 
 > 把 [dsh-whale-widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget) 右下角的小鲸鱼，换成《绝区零》爱芮的**实时 Spine 骨骼动画**。
 > 余额、今日已用、每轮消耗、泡泡编辑器、音效、吸附翻转——上游能力一个不少；小鲸鱼仍可随时切回。
@@ -42,12 +42,12 @@
 
 ### 方式 A：本地包 + 内置 plugin_manager（推荐）
 
-1. 把 `dsh-whale-widget-airui-0.4.2-airui.2.tgz` 放到一个**固定、以后不会移动**的目录，例如
+1. 把 `dsh-whale-widget-airui-0.4.2-airui.4.tgz` 放到一个**固定、以后不会移动**的目录，例如
    `D:\Plugins\dsh-whale-widget-airui\`。
 2. 在 DSH 桌面客户端里新建/使用一个会话，对 DSH 说：
 
    > 请使用当前桌面端内置的 `plugin_manager`，安装本机包
-   > `file:D:\Plugins\dsh-whale-widget-airui\dsh-whale-widget-airui-0.4.2-airui.2.tgz`。
+   > `file:D:\Plugins\dsh-whale-widget-airui\dsh-whale-widget-airui-0.4.2-airui.4.tgz`。
    > 先核对当前 profile 是 `desktop`、是否已装同名插件；完成后告诉我结果和是否需要重启。
 
 3. **完全退出客户端**（含系统托盘图标）再重新打开。
@@ -138,6 +138,11 @@ plugin/
 如果你只想自己用：保持私有即可。若要开源，请保留本节与 `PROVENANCE.md`，并把仓库声明为「非官方、非商业同人项目」。
 
 ---
+
+## 语音
+
+- 点击/双击/连点、每轮消耗、余额预警、充值、空闲（45–90 秒一次）都会播放对应的爱芮中文台词，并与「全部音效」总开关联动。
+- 台词文件来自游戏内语音（Ariaidol），**版权归米哈游，仅本地使用**：ssets/zzz/voice/ 已在 .gitignore 中排除，不会随 GitHub 仓库分发；缺失时自动静默。
 
 ## 已知限制
 

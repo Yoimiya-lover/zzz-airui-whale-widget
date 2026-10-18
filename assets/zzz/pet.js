@@ -19,11 +19,26 @@
   var ASSET_DIR = BASE + 'airui/'
   var STILL_URL = BASE + 'airui-idle.png'
   var PAD = 1.02
-  var GAZE_BONE = '眼部控制器'
-  var GAZE_UNITS = 11
+  var GAZE_BONES = ['眼_瞳孔L_微动', '眼_瞳孔_微动']
+  // 世界单位：瞳孔最大偏移约 22（眼睛本身宽约 70），再大就会“脱眶”。
+  var GAZE_WORLD = 22
   var GAZE_SMOOTHING = 11
   var IDLE_BODY = '动作_待机'
   var IDLE_FACE = '表情_常态'
+
+  // —— 语音（游戏内台词，仅本地使用；文件缺失时静默）——
+  var VOICE_BASE = BASE + 'voice/'
+  var VOICE_LINES = {
+    click: ['click_hey', 'click_mhm', 'click_manager'],
+    idle: ['idle_what', 'idle_rest', 'idle_stop', 'idle_tired'],
+    angry: ['angry_no', 'angry_trouble'],
+    cost: ['cost_again'],
+    happy: ['happy_great', 'happy_again'],
+    recharge: ['recharge_income'],
+  }
+  var VOICE_VOLUME = 0.85
+  var IDLE_VOICE_MIN_MS = 45000
+  var IDLE_VOICE_MAX_MS = 90000
 
   var runtimePromise = null
   var mount = null
@@ -61,10 +76,14 @@
     this.data = null
     this.skeleton = null
     this.state = null
-    this.gazeBone = null
-    this.gazeBase = null
+    this.gazeBones = []
     this.gazeTarget = { x: 0, y: 0 }
     this.gaze = { x: 0, y: 0 }
+    this.voiceEnabled = true
+    this.voiceEls = {}
+    this.voiceLast = ''
+    this.voiceCurrent = null
+    this.idleVoiceTimer = 0
     this.raf = 0
     this.last = 0
     this.dead = false
@@ -107,8 +126,13 @@
       self.state.apply(self.skeleton)
       self.skeleton.updateWorldTransform(window.spine.Physics.update)
 
-      self.gazeBone = self.skeleton.findBone(GAZE_BONE)
-      if (self.gazeBone) self.gazeBase = { x: self.gazeBone.x, y: self.gazeBone.y }
+      // 视线只动**瞳孔**：不能动 `眼部控制器`，它挂了 眼L_size/眼R_size 的 transform 约束
+      //（mixY 默认 1），一偏就把眼框/眼皮拖到瞳孔上面，看起来像“左眼叠了一层”。
+      self.gazeBones = []
+      for (var gi = 0; gi < GAZE_BONES.length; gi++) {
+        var gb = self.skeleton.findBone(GAZE_BONES[gi])
+        if (gb && gb.parent) self.gazeBones.push(gb)
+      }
 
       self.fit()
       self.state.addListener({
@@ -119,7 +143,9 @@
         },
       })
       self.ready = true
+      self.preloadVoices()
       self.start()
+      self.scheduleIdleVoice()
       log('ready', self.data.bones.length + ' bones')
     })
   }
@@ -137,12 +163,19 @@
     this.syncSize()
   }
 
-  // SceneRenderer.resize() 会把 camera 视口改成画布的**像素尺寸**，
-  // 所以顺序必须是：先 resize（同步位图 / gl.viewport），再按世界尺寸重设相机。
+  // 画布按 CSS 尺寸缩放，但**内部分辨率有下限**：145px 的 1:1 位图会把眼睛糊成一团，
+  // 这里至少渲染 480px，再交给浏览器缩小。
   Pet.prototype.syncSize = function () {
     var canvas = this.canvas
-    if (!canvas.clientWidth || !canvas.clientHeight || !this.side) return
-    this.renderer.resize(window.spine.ResizeMode.Expand)
+    var cssW = canvas.clientWidth
+    if (!cssW || !canvas.clientHeight || !this.side) return
+    var dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1))
+    var px = Math.max(Math.round(cssW * dpr), 480)
+    if (canvas.width !== px || canvas.height !== px) {
+      canvas.width = px
+      canvas.height = px
+    }
+    this.gl.viewport(0, 0, px, px)
     var cam = this.renderer.camera
     cam.setViewport(this.side, this.side)
     cam.position.x = this.centerX
@@ -183,8 +216,8 @@
   }
 
   Pet.prototype.applyGaze = function (dt) {
-    var bone = this.gazeBone
-    if (!bone || !this.gazeBase) return false
+    var bones = this.gazeBones
+    if (!bones || !bones.length) return false
     var k = 1 - Math.exp(-GAZE_SMOOTHING * dt)
     this.gaze.x += (this.gazeTarget.x - this.gaze.x) * k
     this.gaze.y += (this.gazeTarget.y - this.gaze.y) * k
@@ -194,10 +227,91 @@
       flipped = !!(root && root.classList.contains('dshwv-left'))
     } catch (err) {}
     var dir = flipped ? -1 : 1
-    bone.x = this.gazeBase.x + this.gaze.x * GAZE_UNITS * dir
-    bone.y = this.gazeBase.y + this.gaze.y * GAZE_UNITS
-    this.lastGaze = { dx: +(bone.x - this.gazeBase.x).toFixed(2), dy: +(bone.y - this.gazeBase.y).toFixed(2) }
+    if (!this._v0) { this._v0 = new window.spine.Vector2(); this._v1 = new window.spine.Vector2() }
+    var prev = this.gazePrev = []
+    var firstDx = 0
+    var firstDy = 0
+    for (var i = 0; i < bones.length; i++) {
+      var bone = bones[i]
+      var parent = bone.parent
+      var px = bone.x
+      var py = bone.y
+      prev.push({ bone: bone, x: px, y: py })
+      // 局部单位会踩到父级缩放（11 单位 ≈ 0.7 世界单位，肉眼不可见）；
+      // 这里按世界坐标算偏移，再换回父级局部坐标。
+      var origin = parent.worldToLocal(this._v0.set(0, 0))
+      var target = parent.worldToLocal(this._v1.set(this.gaze.x * GAZE_WORLD * dir, this.gaze.y * GAZE_WORLD))
+      var dx = target.x - origin.x
+      var dy = target.y - origin.y
+      bone.x = px + dx
+      bone.y = py + dy
+      if (i === 0) { firstDx = dx; firstDy = dy }
+    }
+    this.lastGaze = { dx: +firstDx.toFixed(2), dy: +firstDy.toFixed(2) }
     return true
+  }
+
+  Pet.prototype.preloadVoices = function () {
+    var self = this
+    Object.keys(VOICE_LINES).forEach(function (kind) {
+      VOICE_LINES[kind].forEach(function (name) {
+        try {
+          var a = new Audio(VOICE_BASE + name + '.wav')
+          a.preload = 'auto'
+          a.volume = VOICE_VOLUME
+          a.addEventListener('error', function () { delete self.voiceEls[name] })
+          self.voiceEls[name] = a
+        } catch (err) {}
+      })
+    })
+  }
+
+  Pet.prototype.playVoice = function (kind) {
+    if (!this.voiceEnabled) return
+    var list = VOICE_LINES[kind]
+    if (!list || !list.length) return
+    var last = this.voiceLast
+    var pool = list.filter(function (n) { return n !== last })
+    if (!pool.length) pool = list
+    var name = pool[Math.floor(Math.random() * pool.length)]
+    var el = this.voiceEls[name]
+    if (!el) return
+    try {
+      if (this.voiceCurrent && this.voiceCurrent !== el) {
+        this.voiceCurrent.pause()
+        this.voiceCurrent.currentTime = 0
+      }
+      el.currentTime = 0
+      el.volume = VOICE_VOLUME
+      var p = el.play()
+      if (p && typeof p.catch === 'function') p.catch(function () {})
+      this.voiceCurrent = el
+      this.voiceLast = name
+    } catch (err) {}
+  }
+
+  Pet.prototype.setVoiceEnabled = function (on) {
+    this.voiceEnabled = on !== false
+    if (!this.voiceEnabled && this.voiceCurrent) {
+      try {
+        this.voiceCurrent.pause()
+        this.voiceCurrent.currentTime = 0
+      } catch (err) {}
+    }
+  }
+
+  Pet.prototype.scheduleIdleVoice = function () {
+    var self = this
+    if (this.idleVoiceTimer) clearTimeout(this.idleVoiceTimer)
+    var delay = IDLE_VOICE_MIN_MS + Math.random() * (IDLE_VOICE_MAX_MS - IDLE_VOICE_MIN_MS)
+    this.idleVoiceTimer = setTimeout(function () {
+      try {
+        if (!self.dead && self.ready && self.voiceEnabled && document.visibilityState !== 'hidden') {
+          self.playVoice('idle')
+        }
+      } catch (err) {}
+      self.scheduleIdleVoice()
+    }, delay)
   }
 
   Pet.prototype.start = function () {
@@ -239,9 +353,12 @@
     this.renderer.begin()
     this.renderer.drawSkeleton(this.skeleton, true)
     this.renderer.end()
-    if (gazing) {
-      this.gazeBone.x = this.gazeBase.x
-      this.gazeBone.y = this.gazeBase.y
+    if (gazing && this.gazePrev) {
+      for (var pi = 0; pi < this.gazePrev.length; pi++) {
+        var pv = this.gazePrev[pi]
+        pv.bone.x = pv.x
+        pv.bone.y = pv.y
+      }
     }
   }
 
@@ -250,6 +367,8 @@
     if (this.raf) cancelAnimationFrame(this.raf)
     this.raf = 0
     try { if (this.ro) this.ro.disconnect() } catch (err) {}
+    if (this.idleVoiceTimer) { clearTimeout(this.idleVoiceTimer); this.idleVoiceTimer = 0 }
+    try { if (this.voiceCurrent) { this.voiceCurrent.pause(); this.voiceCurrent.currentTime = 0 } } catch (err) {}
     document.removeEventListener('pointermove', this.boundPointer)
     try { if (this.manager) this.manager.dispose() } catch (err) {}
     try { if (this.renderer) this.renderer.dispose() } catch (err) {}
@@ -383,11 +502,14 @@
     if (rapid) {
       clickTimes = []
       mount.playOnce('动作_生气', '表情_生气')
+      mount.playVoice('angry')
       say(pickLine('angry'))
     } else if (double) {
       mount.playOnce('动作_自信', '表情_自信')
+      mount.playVoice('happy')
     } else {
       mount.playOnce('动作_兴奋', '表情_兴奋')
+      mount.playVoice('click')
     }
   }
 
@@ -395,13 +517,16 @@
     if (!mount || !mount.ready) return
     if (kind === 'cost') {
       mount.playOnce('动作_无奈', '表情_无奈')
+      mount.playVoice('cost')
       var amount = Number(value)
       say(pickLine('cost').replace('{cost}', isFinite(amount) ? amount.toFixed(2) : '?'))
     } else if (kind === 'lowbalance') {
       mount.playOnce('动作_生气', '表情_生气')
+      mount.playVoice('angry')
       say(pickLine('low'))
     } else if (kind === 'recharge') {
       mount.playOnce('动作_自信', '表情_自信')
+      mount.playVoice('recharge')
     }
   }
 
@@ -419,6 +544,9 @@
     setRole: setRole,
     onClick: onClick,
     notify: notify,
+    setVoiceEnabled: function (on) {
+      if (mount) mount.setVoiceEnabled(on)
+    },
     isActive: function () { return !!(mount && mount.ready) },
     debug: function () {
       if (!mount) return null
@@ -441,7 +569,7 @@
             return { body: e && e.animation ? e.animation.name : '', face: f && f.animation ? f.animation.name : '' }
           } catch (err) { return null }
         })(),
-        gaze: mount.gazeBone && mount.gazeBase ? {
+        gaze: mount.gazeBones && mount.gazeBones.length ? {
           dx: mount.lastGaze ? mount.lastGaze.dx : 0,
           dy: mount.lastGaze ? mount.lastGaze.dy : 0,
           tx: +mount.gazeTarget.x.toFixed(2),

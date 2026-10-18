@@ -32,3 +32,6 @@ dev/dsh-home/
 *.tgz
 dist/
 
+
+# 爱芮语音（游戏素材，版权归米哈游，仅本地使用，禁止随仓库分发）
+assets/zzz/voice/

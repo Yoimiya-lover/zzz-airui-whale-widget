@@ -1,6 +1,6 @@
-﻿airui.png
+airui.png
 size:2048,2048
-filter:MipMapLinearLinear,Linear
+filter:Linear,Linear
 scale:0.7
 光环
 bounds:3,1297,694,748
@@ -229,7 +229,7 @@ bounds:703,871,293,307
 
 airui_2.png
 size:2048,512
-filter:MipMapLinearLinear,Linear
+filter:Linear,Linear
 scale:0.7
 发_a
 bounds:197,34,132,165

@@ -19700,6 +19700,8 @@ function setPressOn(v) {
 function setSoundOn(v) {
   soundOn = v !== false
   try { soundToggle.checked = soundOn } catch (err) {}
+  // 爱芮语音跟随“全部音效”总开关
+  try { if (window.ZZZPet) window.ZZZPet.setVoiceEnabled(soundOn) } catch (err) {}
   if (!soundOn) {
     dshwvAudioSuspendNow()
   } else {
@@ -20114,12 +20116,21 @@ function applyRole(id, name, url, engine) {
 // pet.js 与 widget.js 是两支独立脚本（桌面端注入顺序不保证），这里做一次有限重试，
 // 避免“爱芮渲染层晚到几百毫秒”导致角色停在上游的静态静帧上。
 function zzzSetRole(id) {
-  if (window.ZZZPet) { try { window.ZZZPet.setRole(id) } catch (err) {} return }
+  if (window.ZZZPet) {
+    try {
+      window.ZZZPet.setRole(id)
+      window.ZZZPet.setVoiceEnabled(soundOn !== false)
+    } catch (err) {}
+    return
+  }
   var tries = 0
   var timer = setInterval(function () {
     if (window.ZZZPet) {
       clearInterval(timer)
-      try { window.ZZZPet.setRole(id) } catch (err) {}
+      try {
+        window.ZZZPet.setRole(id)
+        window.ZZZPet.setVoiceEnabled(soundOn !== false)
+      } catch (err) {}
       return
     }
     if (++tries > 50) clearInterval(timer)
