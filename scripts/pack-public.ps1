@@ -18,7 +18,7 @@ New-Item -ItemType Directory -Force $OutDir | Out-Null
 $work = Join-Path $env:TEMP ('airui-public-' + [guid]::NewGuid().ToString('N'))
 $stage = Join-Path $work 'package'
 New-Item -ItemType Directory -Force $stage | Out-Null
-foreach ($f in 'package.json', 'cordis.patch.yml', 'icon.png', 'README.md', 'PROVENANCE.md', 'LICENSE') {
+foreach ($f in 'package.json', 'cordis.patch.yml', 'icon.png', 'README.md', 'PROVENANCE.md', 'NOTICE.md', 'LICENSE') {
   Copy-Item (Join-Path $root $f) $stage -Force
 }
 Copy-Item (Join-Path $root 'lib') (Join-Path $stage 'lib') -Recurse

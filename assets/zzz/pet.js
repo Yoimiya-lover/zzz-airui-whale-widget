@@ -88,12 +88,16 @@
     this.voiceLast = ''
     this.voiceCurrent = null
     this.idleVoiceTimer = 0
+    this.suspended = false
     this.raf = 0
     this.last = 0
     this.dead = false
     this.ready = false
     this.hover = false
     this.boundPointer = this.onPointerMove.bind(this)
+    this.boundVisibility = this.onVisibilityChange.bind(this)
+    this.boundBlur = this.onWindowBlur.bind(this)
+    this.boundFocus = this.onWindowFocus.bind(this)
   }
 
   Pet.prototype.init = function () {
@@ -289,8 +293,53 @@
     })
   }
 
+  // 窗口切到后台 / 最小化 / 失焦 / 挂件被隐藏时，都不再出声：
+  // 已经开播的语音立即暂停，待机语音与事件语音都不再触发。
+  Pet.prototype.isBackground = function () {
+    try {
+      if (document.visibilityState === 'hidden') return true
+    } catch (err) {}
+    if (this.suspended) return true
+    try {
+      if (!this.canvas.isConnected || !this.canvas.offsetParent) return true
+    } catch (err) {}
+    return false
+  }
+
+  Pet.prototype.stopVoice = function () {
+    if (!this.voiceCurrent) return
+    try {
+      this.voiceCurrent.pause()
+      this.voiceCurrent.currentTime = 0
+    } catch (err) {}
+  }
+
+  Pet.prototype.onVisibilityChange = function () {
+    if (document.visibilityState === 'hidden') {
+      this.suspended = true
+      this.stopVoice()
+    } else {
+      this.suspended = false
+    }
+  }
+
+  Pet.prototype.onWindowBlur = function () {
+    this.suspended = true
+    this.stopVoice()
+  }
+
+  Pet.prototype.onWindowFocus = function () {
+    // 只有“回到前台且页面可见”才恢复；最小化时 focus 也可能触发，别被骗
+    try {
+      if (document.visibilityState !== 'hidden') this.suspended = false
+    } catch (err) {
+      this.suspended = false
+    }
+  }
+
   Pet.prototype.playVoice = function (kind) {
     if (!this.voiceEnabled) return
+    if (this.isBackground()) return
     var list = VOICE_LINES[kind]
     if (!list || !list.length) return
     var last = this.voiceLast
@@ -329,7 +378,7 @@
     var delay = IDLE_VOICE_MIN_MS + Math.random() * (IDLE_VOICE_MAX_MS - IDLE_VOICE_MIN_MS)
     this.idleVoiceTimer = setTimeout(function () {
       try {
-        if (!self.dead && self.ready && self.voiceEnabled && document.visibilityState !== 'hidden') {
+        if (!self.dead && self.ready && self.voiceEnabled && !self.isBackground()) {
           self.playVoice('idle')
         }
       } catch (err) {}
@@ -349,6 +398,9 @@
     }
     this.raf = requestAnimationFrame(tick)
     document.addEventListener('pointermove', this.boundPointer, { passive: true })
+    document.addEventListener('visibilitychange', this.boundVisibility)
+    window.addEventListener('blur', this.boundBlur)
+    window.addEventListener('focus', this.boundFocus)
     // 挂件缩放（root 宽度变化）时画布 CSS 尺寸会变：重新同步位图与相机视口
     try {
       if (window.ResizeObserver) {
@@ -398,6 +450,9 @@
     if (this.idleVoiceTimer) { clearTimeout(this.idleVoiceTimer); this.idleVoiceTimer = 0 }
     try { if (this.voiceCurrent) { this.voiceCurrent.pause(); this.voiceCurrent.currentTime = 0 } } catch (err) {}
     document.removeEventListener('pointermove', this.boundPointer)
+    document.removeEventListener('visibilitychange', this.boundVisibility)
+    window.removeEventListener('blur', this.boundBlur)
+    window.removeEventListener('focus', this.boundFocus)
     try { if (this.manager) this.manager.dispose() } catch (err) {}
     try { if (this.renderer) this.renderer.dispose() } catch (err) {}
     try {

@@ -12,7 +12,7 @@
     -NoKill      检测到 DSH 正在运行时不自动结束，直接退出
     -NoVoice     不自动下载语音（默认会从公开数据集拉取 13 条，约 173MB）
     -ProfileDir  指定 profile 目录（默认 %USERPROFILE%\.dsh\profiles\desktop，测试用）
-    -Tgz         指定安装包路径（默认脚本旁的 dist\dsh-whale-widget-airui-0.4.2-airui.6.tgz；
+    -Tgz         指定安装包路径（默认脚本旁的 dist\dsh-whale-widget-airui-0.4.2-airui.7.tgz；
                  找不到时会自动从 GitHub 下载仓库并现场打包，方便别人一键安装）
 #>
 [CmdletBinding()]
@@ -31,7 +31,7 @@ $PkgName = 'dsh-whale-widget-airui'
 $RepoUrl = 'https://github.com/Yoimiya-lover/zzz-airui-whale-widget'
 $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 $profile = if ($ProfileDir) { $ProfileDir } else { Join-Path $env:USERPROFILE '.dsh\profiles\desktop' }
-$tgz = if ($Tgz) { $Tgz } else { Join-Path $scriptDir 'dist\dsh-whale-widget-airui-0.4.2-airui.6.tgz' }
+$tgz = if ($Tgz) { $Tgz } else { Join-Path $scriptDir 'dist\dsh-whale-widget-airui-0.4.2-airui.7.tgz' }
 $pluginsDir = if ($PluginsDir) { $PluginsDir } else { Join-Path $env:USERPROFILE '.dsh\plugins\dsh-whale-widget-airui' }
 
 function Write-Step($msg) { Write-Host "[*] $msg" -ForegroundColor Cyan }
@@ -145,7 +145,7 @@ if (-not (Test-Path $tgz)) {
     }
     $stage = Join-Path $work 'package'
     New-Item -ItemType Directory -Force $stage | Out-Null
-    foreach ($f in 'package.json', 'cordis.patch.yml', 'icon.png', 'README.md', 'PROVENANCE.md', 'LICENSE') {
+    foreach ($f in 'package.json', 'cordis.patch.yml', 'icon.png', 'README.md', 'PROVENANCE.md', 'NOTICE.md', 'LICENSE') {
       Copy-Item (Join-Path $src $f) $stage -Force
     }
     Copy-Item (Join-Path $src 'lib') (Join-Path $stage 'lib') -Recurse

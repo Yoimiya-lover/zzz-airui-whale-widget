@@ -152,6 +152,7 @@ plugin/
 ## 语音
 
 - 点击/双击/连点、每轮消耗、余额预警、充值、空闲（45–90 秒一次）都会播放对应的爱芮中文台词，并与「全部音效」总开关联动。
+- **DSH 切到后台 / 最小化 / 失焦时自动静音**：已经开播的语音立即暂停，待机语音和事件语音都不再触发；回到前台后恢复。
 - 语音**不随仓库和公开安装包分发**：`assets/zzz/voice/` 已加入 `.gitignore`。安装脚本默认会从公开数据集自动获取 13 条（约 173MB，来自 [Zenless Voice](https://huggingface.co/datasets/simon3000/zenless-voice) 的中文说话人 `Ariaidol`），不想下载可加 `-NoVoice`。
 - 语音版权归**米哈游 / COGNOSPHERE**，仅供个人使用，**请勿再分发**；缺失时插件静默运行，不影响其他功能。
 - 之后想补语音：`powershell -ExecutionPolicy Bypass -File scripts\fetch-voice.ps1`（可用 `-TargetDir` 指向已安装插件的 `assets\zzz\voice`）。
