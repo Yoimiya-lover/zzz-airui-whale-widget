@@ -71,6 +71,31 @@
 
 > 网页版（`dsh web`）：`dsh plugin --profile web add link:<解压目录绝对路径>`，重启后 `Ctrl+F5`。
 
+### 方式 C：插件市场（Discover）一键安装
+
+DSH 的插件市场按“索引 URL”读取，添加一次之后就能在「插件 → 发现」里点安装：
+
+1. 打开 DSH →「插件」→「发现」→「索引源」；
+2. 添加下面任意一个 URL：
+   - `https://raw.githubusercontent.com/Yoimiya-lover/zzz-airui-whale-widget/main/market/index.json`
+   - 镜像（国内更稳）：`https://cdn.jsdelivr.net/gh/Yoimiya-lover/zzz-airui-whale-widget@main/market/index.json`
+3. 刷新后找到「爱芮余额挂件」，点安装。
+
+> 市场索引指向 **固定 commit** 的 Git 安装，所以装的是已发布版本、不会跟着 `main` 漂移。
+> 该方式安装**不含语音**（版权原因）：装完后按下一节「语音」运行 `scripts\fetch-voice.ps1` 补齐。
+>
+> 索引格式与字段见 [`market/index.json`](market/index.json)；每次发版后需要把 `versions[0].version` 与 `source.commit` 更新到新版本 / 新提交。
+
+### 方式 D：npm（发布后可用）
+
+包名 `dsh-whale-widget-airui`，发布后可直接按名字安装：
+
+```powershell
+dsh plugin --profile web add dsh-whale-widget-airui
+```
+
+桌面端则在插件管理里输入包名 `dsh-whale-widget-airui` 安装。
+
 ### 自检
 
 - 宿主半区：`%USERPROFILE%\.dsh\.dshw-turn.json` 是否生成、`seq` 是否随对话递增；

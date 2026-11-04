@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Airui Widget",
+    "zh": "爱芮余额挂件"
+  },
+  "description": {
+    "en": "A DSH balance widget with the Zenless Zone Zero character Airui, rendered live with Spine.",
+    "zh": "把 DSH 右下角的余额挂件换成《绝区零》爱芮：实时 Spine 动画、眼神跟随、语音与记账。"
+  },
+  "metadata": {
+    "categories": {
+      "pet": {
+        "title": { "en": "Desktop Pet", "zh": "桌宠" }
+      }
+    },
+    "labels": {
+      "open-source": {
+        "title": { "en": "Open Source", "zh": "开源" }
+      },
+      "spine": {
+        "title": { "en": "Spine Animation", "zh": "Spine 动画" }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "name": "dsh-whale-widget-airui",
+      "title": {
+        "en": "Airui Balance Widget",
+        "zh": "爱芮余额挂件"
+      },
+      "description": {
+        "en": "Replaces the whale in dsh-whale-widget with Airui from Zenless Zone Zero: live Spine idle/click animations, cursor-following eyes, Chinese voice lines, balance and accounting kept.",
+        "zh": "基于 dsh-whale-widget 的 fork：把静态小鲸鱼换成爱芮的实时 Spine 骨骼动画，支持待机/点击反馈、眼神跟随、中文语音，保留余额、今日已用与记账。"
+      },
+      "author": "Yoimiya-lover",
+      "homepage": "https://github.com/Yoimiya-lover/zzz-airui-whale-widget",
+      "repository": {
+        "url": "https://github.com/Yoimiya-lover/zzz-airui-whale-widget"
+      },
+      "icon": "https://raw.githubusercontent.com/Yoimiya-lover/zzz-airui-whale-widget/main/icon.png",
+      "metadata": {
+        "category": "pet",
+        "keywords": [
+          "dsh",
+          "deepseek-harness",
+          "balance",
+          "widget",
+          "zenless-zone-zero",
+          "airui",
+          "spine",
+          "desktop-pet"
+        ],
+        "labels": ["open-source", "spine"]
+      },
+      "versions": [
+        {
+          "version": "0.4.2-airui.7",
+          "publishTimestamp": 1762257600,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Yoimiya-lover/zzz-airui-whale-widget",
+            "commit": "4d72b6703dfd5b1ad7a9ad50b3a29796df254e57"
+          }
+        }
+      ]
+    }
+  ]
+}
